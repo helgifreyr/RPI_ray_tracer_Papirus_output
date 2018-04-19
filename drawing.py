@@ -3,12 +3,12 @@ matplotlib.use('Agg')
 
 def RHS(w, s, p):
     """
-    Defines the differential equations for the coupled spring-mass system.
+    Defines the differential equations for the system 
 
     Arguments:
         x :  vector of the state variables:
                   x = [t,x=r',r,phi]
-        s :  proper time
+        s :  affine parameter
         p :  vector of the parameters:
                   p = [rs,a,b]
                   a = p_phi, p_t = -a/b
@@ -118,8 +118,8 @@ numpoints = sf*20+1
 s = linspace(s1,sf,numpoints)
 # Pack up the parameters and initial conditions:
 p = [rs, a, b]
-x0 = [t1, x1, r1, phi1]
+x0 = [s1, x1, r1, phi1]
 
 # loop over b's
-for i in linspace(-2,0,11):
+for i in linspace(-2,2,21):
     run(RHS, s, [rs, a, i], x0)
