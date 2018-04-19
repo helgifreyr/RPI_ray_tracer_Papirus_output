@@ -1,14 +1,14 @@
 import matplotlib
 matplotlib.use('Agg')
 
-def RHS(w, tau, p):
+def RHS(w, s, p):
     """
     Defines the differential equations for the coupled spring-mass system.
 
     Arguments:
         x :  vector of the state variables:
                   x = [t,x=r',r,phi]
-        tau :  proper time
+        s :  proper time
         p :  vector of the parameters:
                   p = [rs,a,b]
                   a = p_phi, p_t = -a/b
@@ -29,7 +29,7 @@ def writeToFile(proper_time,solutions):
         for time, solution in zip(proper_time, solutions):
             f.write(str(time)+' '.join([" %s" % i for i in solution])+'\n')    
 
-def solveGeodesic(RightHandSide,tau,p,x0):
+def solveGeodesic(RightHandSide,s,p,x0):
     
     solutions = [[0,0,0,0] for i in range(numpoints)]
     solutions[0] = x0
@@ -42,25 +42,25 @@ def solveGeodesic(RightHandSide,tau,p,x0):
     # loop each time step, kill loop if r is too close to rs
     for idx in range(1,int(numpoints)):
         if x0[2]>1.05*rs and x0[2]<1.05*r1:
-            solutions[idx] = odeint(RightHandSide, x0, [tau[idx-1],tau[idx]], args=(p,), atol=abserr, rtol=relerr)[1]
+            solutions[idx] = odeint(RightHandSide, x0, [s[idx-1],s[idx]], args=(p,), atol=abserr, rtol=relerr)[1]
             x0 = solutions[idx]
             if idx>1 and idx%50 == 0:
                 #print(time.time()-tstar)
-                writeToFile(tau[:idx],solutions[:idx])
+                writeToFile(s[:idx],solutions[:idx])
                 drawBitmap(rs,r1)
                 trim('output')
                 drawOnScreen()
         else:
-            writeToFile(tau[:idx],solutions[:idx])
+            writeToFile(s[:idx],solutions[:idx])
             drawBitmap(rs,r1)
             trim('output')
             drawOnScreen()
             break
     
-    return tau[:idx], solutions[:idx]
+    return s[:idx], solutions[:idx]
 
 def drawBitmap(rs,r1):
-    tau, t, x, r, phi = loadtxt('output.dat', unpack=True)
+    s, t, x, r, phi = loadtxt('output.dat', unpack=True)
     figure(1, figsize=(6, 2.7))
 
     ax = subplot(111, polar=True)
@@ -87,8 +87,8 @@ def drawOnScreen():
     image = PapirusImage()
     image.write('output-trimmed.png')
 
-def run(RHS, tau, p, x0):
-    tau, xsol=solveGeodesic(RHS,tau,p,x0)
+def run(RHS, s, p, x0):
+    s, xsol=solveGeodesic(RHS,s,p,x0)
 
 # Use ODEINT to solve the differential equations defined by the vector field
 from scipy.integrate import odeint
@@ -107,19 +107,19 @@ a = 1
 b = -1.755
 
 # Initial conditions
-t1 = 0
+s1 = 0
 r1 = 8  # in multiples of rs
 x1 = -1 # this is initial r velocity if you'd like
 phi1 = 0 # this is where "around" the BH the ray starts, 0 for east, pi/2 for north, etc
 
 
-tf = 10**4
-numpoints = tf*20+1
-tau = linspace(t1,tf,numpoints)
+sf = 10**4
+numpoints = sf*20+1
+s = linspace(s1,sf,numpoints)
 # Pack up the parameters and initial conditions:
 p = [rs, a, b]
 x0 = [t1, x1, r1, phi1]
 
 # loop over b's
 for i in linspace(-2,0,11):
-    run(RHS, tau, [rs, a, i], x0)
+    run(RHS, s, [rs, a, i], x0)
