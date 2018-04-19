@@ -120,5 +120,6 @@ tau = linspace(t1,tf,numpoints)
 p = [rs, a, b]
 x0 = [t1, x1, r1, phi1]
 
+# loop over b's
 for i in linspace(-2,0,11):
     run(RHS, tau, [rs, a, i], x0)
