@@ -18,7 +18,7 @@ def RHS(w, tau, p):
 
     # Create f = (t',x',r',phi'):
     f = [-a * 1/(1-rs/r),
-         1/r**2 * (rs/2 + b**2/r - 3./2 * b**2 * rs / r**2),
+         1/r**2 * (rs/2.0 + b**2/r - 3./2.0 * b**2 * rs / r**2),
          x,
          b/r**2]
     return f
@@ -32,7 +32,7 @@ def writeToFile(proper_time,solutions):
 def solveGeodesic(RightHandSide,tau,p,x0):
     
     solutions = [[0,0,0,0] for i in range(numpoints)]
-    solutions[0] = x0   
+    solutions[0] = x0
     rs, a, b = p
 
     # ODE solver parameters
@@ -41,11 +41,11 @@ def solveGeodesic(RightHandSide,tau,p,x0):
 
     # loop each time step, kill loop if r is too close to rs
     for idx in range(1,int(numpoints)):
-        print(idx)
-        if x0[2]>1.1*rs and x0[2]<1.1*r1:
+        if x0[2]>1.05*rs and x0[2]<1.05*r1:
             solutions[idx] = odeint(RightHandSide, x0, [tau[idx-1],tau[idx]], args=(p,), atol=abserr, rtol=relerr)[1]
             x0 = solutions[idx]
-            if idx>1 and idx%100 == 0:
+            if idx>1 and idx%50 == 0:
+                #print(time.time()-tstar)
                 writeToFile(tau[:idx],solutions[:idx])
                 drawBitmap(rs,r1)
                 trim('output')
@@ -56,8 +56,8 @@ def solveGeodesic(RightHandSide,tau,p,x0):
             trim('output')
             drawOnScreen()
             break
-            
-    return tau[:idx],solutions[:idx]
+    
+    return tau[:idx], solutions[:idx]
 
 def drawBitmap(rs,r1):
     tau, t, x, r, phi = loadtxt('output.dat', unpack=True)
@@ -66,15 +66,12 @@ def drawBitmap(rs,r1):
     ax = subplot(111, polar=True)
     ax.grid(False)
     ax.axis('off')
-    ax.plot(phi,r,linewidth=0.5, color='black')
-    ax.set_ylim(0, 2*r1)
-#    initial = Circle((r[0], phi[0]), 0.02, transform=ax.transData._b, color='red', fill=True)
+    ax.plot(phi,r,linewidth=0.8, color='black')
+    ax.set_ylim(0, 10)
     circle = Circle((0, 0), rs, transform=ax.transData._b, color='black', fill=True)
-#    ax.add_artist(initial)
     ax.add_artist(circle)
 
     savefig('output.png', dpi=800)
-
 
 def trim(file):
     im = Image.open(file+'.png')
@@ -90,26 +87,29 @@ def drawOnScreen():
     image = PapirusImage()
     image.write('output-trimmed.png')
 
+def run(RHS, tau, p, x0):
+    tau, xsol=solveGeodesic(RHS,tau,p,x0)
+
 # Use ODEINT to solve the differential equations defined by the vector field
 from scipy.integrate import odeint
-from numpy import sqrt, zeros, pi, linspace, append, loadtxt, pi
+from numpy import sqrt, zeros, pi, linspace, append, loadtxt, pi, abs
 from pylab import figure, polar, plot, xlabel, ylabel, grid, hold, legend, title, savefig, show, subplot
 from matplotlib.patches import Circle
 from matplotlib.collections import PatchCollection
 from PIL import Image, ImageChops
 from papirus import PapirusImage
+import time
+tstart = time.time()
 
 # Parameter values. these provide the initial velocities via line 11
 rs = 1
 a = 1
-b = -1.705
-
-
+b = -1.755
 
 # Initial conditions
 t1 = 0
 r1 = 8  # in multiples of rs
-x1 = -1 # this is the initial velocity if you'd like
+x1 = -1 # this is initial r velocity if you'd like
 phi1 = 0 # this is where "around" the BH the ray starts, 0 for east, pi/2 for north, etc
 
 
@@ -120,8 +120,5 @@ tau = linspace(t1,tf,numpoints)
 p = [rs, a, b]
 x0 = [t1, x1, r1, phi1]
 
-tau, xsol=solveGeodesic(RHS,tau,p,x0)
-#writeToFile(tau,xsol)
-#drawBitmap(rs,r1)
-#trim('output')
-#drawOnScreen()
+for i in linspace(-2,0,11):
+    run(RHS, tau, [rs, a, i], x0)
