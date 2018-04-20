@@ -41,15 +41,15 @@ def solveGeodesic(RightHandSide,s,p,x0):
 
     # loop each time step, kill loop if r is too close to rs
     for idx in range(1,int(numpoints)):
-        if x0[2]>1.05*rs and x0[2]<1.05*r1:
+        if x0[2]>1.05*rs and x0[2]<5*r1:
             solutions[idx] = odeint(RightHandSide, x0, [s[idx-1],s[idx]], args=(p,), atol=abserr, rtol=relerr)[1]
             x0 = solutions[idx]
-            if idx>1 and idx%50 == 0:
+            #if idx>1 and idx%50 == 0:
                 #print(time.time()-tstar)
-                writeToFile(s[:idx],solutions[:idx])
-                drawBitmap(rs,r1)
-                trim('output')
-                drawOnScreen()
+                #writeToFile(s[:idx],solutions[:idx])
+                #drawBitmap(rs,r1)
+                #trim('output')
+                #drawOnScreen()
         else:
             writeToFile(s[:idx],solutions[:idx])
             drawBitmap(rs,r1)
@@ -66,8 +66,8 @@ def drawBitmap(rs,r1):
     ax = subplot(111, polar=True)
     ax.grid(False)
     ax.axis('off')
-    ax.plot(phi,r,linewidth=0.8, color='black')
-    ax.set_ylim(0, 10)
+    ax.plot(phi,r,linewidth=0.6, color='black')
+    ax.set_ylim(0, r1)
     circle = Circle((0, 0), rs, transform=ax.transData._b, color='black', fill=True)
     ax.add_artist(circle)
 
@@ -81,7 +81,17 @@ def trim(file):
     bbox = diff.getbbox()
     if bbox:
         im = im.crop(bbox)
-        im.save(file+'-trimmed.png')
+        width  = im.size[0]
+        height = im.size[1]
+        ratio = 200./90.
+        if width/height > ratio:
+            w1 = 0.5*width
+        else:
+            w1 = 0.2*width
+        h1 = height - (width - w1)/ratio
+        area = (w1, h1, width, height)
+        cropped_im = im.crop(area)
+        cropped_im.save(file+'-trimmed.png')
 
 def drawOnScreen():
     image = PapirusImage()
@@ -121,5 +131,6 @@ p = [rs, a, b]
 x0 = [s1, x1, r1, phi1]
 
 # loop over b's
-for i in linspace(-2,2,21):
+for i in linspace(-3,1,31):
     run(RHS, s, [rs, a, i], x0)
+trim('output')
